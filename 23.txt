@@ -1,0 +1,79 @@
+import csv
+import datetime
+from collections import defaultdict
+
+# File names
+orders_file = "orders_data.csv"
+customers_file = "customer_info.csv"
+
+# Ensure orders_data.csv exists
+try:
+    with open(orders_file, "r", encoding="utf-8") as file:
+        pass
+except FileNotFoundError:
+    with open(orders_file, "w", encoding="utf-8", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Order ID", "Customer ID", "Order Date"])
+        writer.writerow(["101", "1", "2025-01-10"])
+        writer.writerow(["102", "2", "2025-02-15"])
+        writer.writerow(["103", "1", "2025-02-20"])
+        writer.writerow(["104", "3", "2025-03-05"])
+        writer.writerow(["105", "1", "2025-04-10"])
+        print(f"File '{orders_file}' was missing, so it has been created with sample data.")
+
+# Ensure customer_info.csv exists
+try:
+    with open(customers_file, "r", encoding="utf-8") as file:
+        pass
+except FileNotFoundError:
+    with open(customers_file, "w", encoding="utf-8", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Customer ID", "Name", "Email", "Phone Number"])
+        writer.writerow(["1", "John Doe", "john@example.com", "1234567890"])
+        writer.writerow(["2", "Jane Smith", "jane@example.com", "0987654321"])
+        writer.writerow(["3", "Michael Brown", "michael@example.com", "1122334455"])
+        print(f"File '{customers_file}' was missing, so it has been created with sample data.")
+
+# Load orders data
+orders_data = []
+with open(orders_file, "r", encoding="utf-8") as file:
+    reader = csv.DictReader(file)
+    for row in reader:
+        row["Order Date"] = datetime.datetime.strptime(row["Order Date"], "%Y-%m-%d")
+        orders_data.append(row)
+
+# Load customer data
+customers_data = {}
+with open(customers_file, "r", encoding="utf-8") as file:
+    reader = csv.DictReader(file)
+    for row in reader:
+        customers_data[row["Customer ID"]] = row
+
+# Merge data frames on "Customer ID"
+merged_data = []
+for order in orders_data:
+    customer_info = customers_data.get(order["Customer ID"], {})
+    merged_data.append({**order, **customer_info})
+
+# Calculate average time between consecutive orders per customer
+customer_orders = defaultdict(list)
+for row in merged_data:
+    customer_orders[row["Customer ID"]].append(row["Order Date"])
+
+time_gaps = []
+for customer, dates in customer_orders.items():
+    sorted_dates = sorted(dates)
+    for i in range(1, len(sorted_dates)):
+        time_gaps.append((sorted_dates[i] - sorted_dates[i - 1]).days)
+
+avg_time_between_orders = sum(time_gaps) / len(time_gaps) if time_gaps else None
+
+# Print merged data
+print("\nMerged Customer & Order Data:\n")
+print(f"{'Order ID':<10}{'Customer ID':<12}{'Order Date':<12}{'Name':<20}{'Email':<25}{'Phone Number':<15}")
+print("-" * 80)
+for row in merged_data:
+    print(f"{row['Order ID']:<10}{row['Customer ID']:<12}{row['Order Date'].strftime('%Y-%m-%d'):<12}{row['Name']:<20}{row['Email']:<25}{row['Phone Number']:<15}")
+
+# Print average time between orders
+print(f"\nAverage Time Between Orders: {avg_time_between_orders:.2f} days" if avg_time_between_orders else "\nNo consecutive orders available to calculate the average time.")

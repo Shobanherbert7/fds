@@ -1,0 +1,42 @@
+import csv
+import os
+import re
+
+# File name
+filename = "employee_data.csv"
+
+# Check if the file exists, otherwise create it with sample data
+if not os.path.exists(filename):
+    with open(filename, "w", encoding="utf-8", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Employee ID", "Full Name", "Department", "Salary"])
+        writer.writerow(["1", "John Doe", "HR", "50000"])
+        writer.writerow(["2", "Jane Smith", "", "60000"])
+        writer.writerow(["3", "Michael Brown", "IT", "70000"])
+        writer.writerow(["4", "Emily Johnson", "Finance", "55000"])
+        writer.writerow(["5", "Chris Wilson", "", "45000"])
+        print(f"File '{filename}' was missing, so it has been created with sample data.")
+
+# Load and clean employee data
+cleaned_data = []
+with open(filename, "r", encoding="utf-8") as file:
+    reader = csv.DictReader(file)
+    for row in reader:
+        # Convert "Salary" to numeric type
+        try:
+            row["Salary"] = float(row["Salary"])
+        except ValueError:
+            row["Salary"] = None  # Handle any invalid salary values
+        
+        # Remove rows with missing "Department"
+        if row["Department"].strip():
+            # Extract "First Name" from "Full Name"
+            row["First Name"] = re.split(r"\s+", row["Full Name"])[0]
+            cleaned_data.append(row)
+
+# Print cleaned data
+print("\nCleaned Employee Data:\n")
+print(f"{'Employee ID':<12}{'Full Name':<20}{'Department':<15}{'Salary':<10}{'First Name':<12}")
+print("-" * 60)
+for row in cleaned_data:
+    print(f"{row['Employee ID']:<12}{row['Full Name']:<20}{row['Department']:<15}{row['Salary']:<10}{row['First Name']:<12}")

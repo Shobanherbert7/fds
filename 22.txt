@@ -1,0 +1,42 @@
+import csv
+import datetime
+from collections import defaultdict
+
+# File name
+filename = "temperature_data.csv"
+
+# Check if the file exists, otherwise create it with sample data
+try:
+    with open(filename, "r", encoding="utf-8") as file:
+        pass  # File exists, continue as normal
+except FileNotFoundError:
+    with open(filename, "w", encoding="utf-8", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Date", "Temperature (Celsius)"])
+        writer.writerow(["2025-01-15", "12"])
+        writer.writerow(["2025-01-28", "14"])
+        writer.writerow(["2025-02-10", "18"])
+        writer.writerow(["2025-02-25", "20"])
+        writer.writerow(["2025-03-05", "25"])
+        writer.writerow(["2025-03-22", "23"])
+        print(f"File '{filename}' was missing, so it has been created with sample data.")
+
+# Load and process data
+temperature_data = defaultdict(list)
+
+with open(filename, "r", encoding="utf-8") as file:
+    reader = csv.DictReader(file)
+    for row in reader:
+        date = datetime.datetime.strptime(row["Date"], "%Y-%m-%d")
+        temperature = float(row["Temperature (Celsius)"])
+        temperature_data[date.strftime("%Y-%m")].append(temperature)
+
+# Calculate monthly average temperature
+avg_temperature = {month: sum(temps) / len(temps) for month, temps in temperature_data.items()}
+
+# Display results in chronological order
+print("\nAverage Temperature by Month:\n")
+print(f"{'Month':<10}{'Avg Temperature (°C)':<20}")
+print("-" * 30)
+for month, avg_temp in sorted(avg_temperature.items()):
+    print(f"{month:<10}{avg_temp:.2f}")
